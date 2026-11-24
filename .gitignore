@@ -1,0 +1,37 @@
+# --- Secrets (NEVER commit) ---
+.env
+.env.*
+!.env.example
+
+# --- Local AI assistant instructions ---
+CLAUDE.md
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Virtual environment ---
+.venv/
+venv/
+
+# --- Local database ---
+*.db
+*.sqlite3
+
+# --- Raw API samples (may contain player data; keep local) ---
+scripts/samples/
+
+# --- Logs ---
+*.log
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
