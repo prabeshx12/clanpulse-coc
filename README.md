@@ -154,7 +154,7 @@ One focused task per day. Taking two days on one item is fine.
 
 ### Phase 1: API Client (Days 1–4)
 - ✅ **Day 1:** API key, venv, `.env`; `scripts/hello.py` prints clan info and members table
-- ⬜ **Day 2:** Dump raw JSON from `/currentwar`, `/warlog`, `/players/{tag}` into `scripts/samples/`; study the war shape (states, `attacks`, `order`, `bestOpponentAttack`)
+- ✅ **Day 2:** Dump raw JSON from `/currentwar`, `/warlog`, `/players/{tag}` into `scripts/samples/`; study the war shape (states, `attacks`, `order`, `bestOpponentAttack`)
 - ⬜ **Day 3:** `app/config.py` + `app/coc_client.py`: one class, shared `httpx.Client`, tag encoding, typed exceptions for 403/404/429/503 using the error `reason`
 - ⬜ **Day 4:** Retries with exponential backoff on 429/503; first tests with mocked HTTP
 
