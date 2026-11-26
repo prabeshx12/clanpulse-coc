@@ -150,7 +150,7 @@ Player lookup is **live only**: proxied straight from `/players/{tag}`, nothing 
 
 ## 🗺️ Daily Roadmap
 
-One focused task per day. Taking two days on one item is fine.
+One focused task per day.
 
 ### Phase 1: API Client (Days 1–4)
 - ✅ **Day 1:** API key, venv, `.env`; `scripts/hello.py` prints clan info and members table
@@ -191,20 +191,7 @@ One focused task per day. Taking two days on one item is fine.
 
 ---
 
-## 📝 Daily Workflow
+## ⚖️ Disclaimer
 
-1. Check the roadmap for the first unticked day (and `git log` for where I left off)
-2. Understand today's concept before writing code
-3. Write the code, get it reviewed, fix what's off
-4. Commit with a clear message: `git commit -m "Day 6: collector upserts current war"`
-5. Tick the box in this README
-
----
-
-## ⚠️ Rules
-
-- Never commit `.env` or the API key. `.env` goes in `.gitignore`.
-- Respect rate limits: poll every 5+ minutes, not every few seconds.
-- Follow Supercell's Fan Content Policy before publishing publicly:
-  https://supercell.com/en/fan-content-policy/
-- This project is not affiliated with or endorsed by Supercell.
+This material is unofficial and is not endorsed by Supercell. For more information see
+Supercell's Fan Content Policy: https://supercell.com/en/fan-content-policy/
