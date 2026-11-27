@@ -1,4 +1,6 @@
-# Only what we need so far. We'll add packages on the day we start using them
-# (sqlalchemy on Day 6, apscheduler on Day 11, fastapi/uvicorn on Day 12, ...).
+# Only what we need so far. Packages get added on the day they're first used.
 httpx>=0.27
 python-dotenv>=1.0
+
+# Dev / testing
+pytest>=8.0
