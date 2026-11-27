@@ -1,4 +1,6 @@
 """Wrapper around the Clash of Clans API. Every CoC API call goes through here."""
+import time
+from collections.abc import Callable
 from typing import Any
 from urllib.parse import quote
 
@@ -62,6 +64,23 @@ def _error_from_response(response: httpx.Response) -> CocApiError:
     return error_cls(response.status_code, reason, message)
 
 
+# Errors worth retrying: they're temporary. 403/404 never fix themselves.
+RETRYABLE_ERRORS: tuple[type[Exception], ...] = (
+    RateLimitedError,
+    MaintenanceError,
+    httpx.TransportError,
+)
+
+
+def _parse_retry_after(response: httpx.Response) -> float | None:
+    """Read the Retry-After header (seconds) if the server sent one."""
+    value = response.headers.get("Retry-After")
+    try:
+        return float(value) if value is not None else None
+    except ValueError:            # could be an HTTP date; ignore it
+        return None
+
+
 # ---------------------------------------------------------------- client
 
 def encode_tag(tag: str) -> str:
@@ -77,11 +96,32 @@ class CocClient:
             clan = coc.get_clan("#YQPUY28V")
     """
 
-    def __init__(self, api_key: str, timeout: float = 10.0) -> None:
+    def __init__(
+        self,
+        api_key: str,
+        timeout: float = 10.0,
+        max_retries: int = 3,
+        backoff_base: float = 1.0,
+        max_backoff: float = 30.0,
+        transport: httpx.BaseTransport | None = None,
+        sleep: Callable[[float], None] = time.sleep,
+    ) -> None:
+        """Create the client.
+
+        max_retries:  extra attempts after the first one, for 429/503/network errors
+        backoff_base: first wait in seconds; doubles each retry (1, 2, 4, ...)
+        max_backoff:  upper limit for any single wait
+        transport, sleep: injectable so tests can fake the network and skip real waiting
+        """
+        self._max_retries = max_retries
+        self._backoff_base = backoff_base
+        self._max_backoff = max_backoff
+        self._sleep = sleep
         self._http = httpx.Client(
             base_url=BASE_URL,
             headers={"Authorization": f"Bearer {api_key}"},
             timeout=timeout,
+            transport=transport,
         )
 
     def __enter__(self) -> "CocClient":
@@ -95,11 +135,34 @@ class CocClient:
         self._http.close()
 
     def _get(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
-        """GET a path, return parsed JSON, or raise a CocApiError subclass."""
-        response = self._http.get(path, params=params)
-        if response.status_code != 200:
-            raise _error_from_response(response)
-        return response.json()
+        """GET a path, return parsed JSON, or raise a CocApiError subclass.
+
+        429, 503 and network errors are retried with exponential backoff.
+        Everything else (403, 404, ...) fails immediately: retrying won't fix it.
+        """
+        attempt = 0
+        while True:
+            try:
+                response = self._http.get(path, params=params)
+                if response.status_code == 200:
+                    return response.json()
+                error: Exception = _error_from_response(response)
+                retry_after = _parse_retry_after(response)
+            except httpx.TransportError as exc:   # timeouts, connection failures
+                error, retry_after = exc, None
+
+            if not isinstance(error, RETRYABLE_ERRORS) or attempt >= self._max_retries:
+                raise error
+
+            self._sleep(self._backoff_delay(attempt, retry_after))
+            attempt += 1
+
+    def _backoff_delay(self, attempt: int, retry_after: float | None) -> float:
+        """Wait before the next retry: base * 2^attempt, or Retry-After if longer, capped."""
+        delay = self._backoff_base * (2 ** attempt)
+        if retry_after is not None:
+            delay = max(delay, retry_after)
+        return min(delay, self._max_backoff)
 
     # --- endpoints -------------------------------------------------------
 
