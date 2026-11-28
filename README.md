@@ -136,9 +136,9 @@ uvicorn app.main:app --reload
 
 **Core (war tracker)**
 - **members**: tag (PK), name, town_hall, role, first_seen, last_seen, in_clan
-- **wars**: id, opponent_tag, opponent_name, team_size, start_time, end_time, state, result, is_cwl, *unique on (opponent_tag, start_time)*
+- **wars**: id, opponent_tag, opponent_name, team_size, attacks_per_member, preparation_start_time, start_time, end_time, state, result, is_cwl, clan/opponent stars + destruction, *unique on (opponent_tag, start_time)*
 - **war_participants**: war_id, member_tag, map_position, town_hall, attacks_used, attacks_allowed (2 normal / 1 CWL → missed attacks)
-- **war_attacks**: id, war_id, attacker_tag, defender_tag, stars, destruction, order, *unique on (war_id, order)*
+- **war_attacks**: id, war_id, attacker_tag, defender_tag, stars, destruction, order, duration, *unique on (war_id, order)*
 
 **Later**
 - **member_snapshots**: donations / trophies over time
@@ -159,7 +159,7 @@ One focused task per day.
 - ✅ **Day 4:** Retries with exponential backoff on 429/503; first tests with mocked HTTP
 
 ### Phase 2: War Data (Days 5–9)
-- ⬜ **Day 5:** `app/db.py` + `app/models.py`: `members`, `wars`, `war_participants`, `war_attacks`
+- ✅ **Day 5:** `app/db.py` + `app/models.py`: `members`, `wars`, `war_participants`, `war_attacks`
 - ⬜ **Day 6:** `collector.py`: parse `/currentwar` and upsert the war through `preparation → inWar → warEnded`
 - ⬜ **Day 7:** Idempotent attacks: re-polling mid-war never duplicates; finalize result and missed attacks at `warEnded`
 - ⬜ **Day 8:** `scheduler.py`: APScheduler runs the collector every `POLL_MINUTES` (≥ 5), with logging and error tolerance
